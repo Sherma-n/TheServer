@@ -9,9 +9,10 @@ var User        = require('./app/models/user'); // get the mongoose model
 var port        = process.env.PORT || 8080;
 var jwt         = require('jwt-simple');
 
+
 //Require socket it
-var server      =  require('http').createServer(app);
-var io          = require('socket.io').listen(server);
+var http      =  require('http').Server(app);
+var io          = require('socket.io')(http);
 
 // get our request parameters
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -129,5 +130,5 @@ io.sockets.on('connection', function(socket){
 app.use('/api', apiRoutes);
 
 // Start the server enable for socketio.
-server.listen(port);
+http.listen(port);
 console.log('There will be dragons: http://localhost:' + port);
