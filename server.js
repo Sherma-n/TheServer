@@ -119,10 +119,11 @@ getToken = function (headers) {
   }
 };
 
-io.sockets.on('connection', function(socket){
-  socket.on('send message', function(data) {
-    io.sockets.emit('new message', data);
-    console.log('new message emitted');
+//Socket io
+io.on('connect', function(socket){
+  console.log('a user has connected');
+  socket.on('disconnect', function (){
+    console.log('a user has disconnected');
   });
 });
 
@@ -130,5 +131,7 @@ io.sockets.on('connection', function(socket){
 app.use('/api', apiRoutes);
 
 // Start the server enable for socketio.
-http.listen(port);
-console.log('There will be dragons: http://localhost:' + port);
+http.listen(port, function () {
+  console.log('listening on *:' + port);
+  console.log(process.env.PORT || 8080);
+});
