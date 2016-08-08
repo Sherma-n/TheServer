@@ -77,7 +77,7 @@ apiRoutes.post('/authenticate', function(req, res) {
           // if user is found and password is right create a token
           var token = jwt.encode(user, config.secret);
           // return the information including token as JSON
-          res.json({success: true, token: 'JWT ' + token});
+          res.json({success: true, token: 'JWT ' + token, user: req.body.name});
         } else {
           res.send({success: false, msg: 'Authentication failed. Wrong password.'});
         }
@@ -123,9 +123,18 @@ getToken = function (headers) {
 //Socket io
 io.on('connect', function(socket){
   console.log('a user has connected');
+
+  //on disconnection
   socket.on('disconnect', function (){
     console.log('a user has disconnected');
   });
+
+  //on saving a user
+  socket.on('userregistered', function(data){
+    console.log('user is registering')
+  });
+
+
 });
 
 // connect the api routes under /api/*
