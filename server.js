@@ -3,16 +3,17 @@ var app         = express();
 var bodyParser  = require('body-parser');
 var morgan      = require('morgan');
 var mongoose    = require('mongoose');
-var passport  = require('passport');
+var passport    = require('passport');
 var config      = require('./config/database'); // get db config file
-var User        = require('./app/models/user'); // get the mongoose model
+var User        = require('./app/models/user');
+var House       = require('./app/models/house')
 var port        = process.env.PORT || 8080;
 var jwt         = require('jwt-simple');
 
 
 //Require socket it
 var http      =  require('http').Server(app);
-var io          = require('socket.io')(http);
+var io        = require('socket.io')(http);
 
 // get our request parameters
 app.use(bodyParser.urlencoded({ extended: false }));
