@@ -134,6 +134,46 @@ io.on('connect', function(socket){
     console.log('user is registering')
   });
 
+  //saving a house
+  socket.on('addedHouse', function(data) {
+
+    var newHouse = new House({
+                              name: data.house.name,
+                              country: data.house.country,
+                              location: data.house.location,
+                              users: [data.user.user]
+                            });
+    newHouse.save(function(err) {
+      if (err) throw err;
+      // console.log(newHouse);
+      console.log('House Created');
+    });
+
+    User.findOneAndUpdate(
+      {name: data.user.user},
+      {$push: {houses: data.house.name}},
+      {safe: true, upsert: true},
+      function(err, model) {
+    });
+
+    User.find({name: data.user.user}, function (err,docs){
+      if (err) throw (err);
+      console.log(docs);
+      socket.emit('loadhouses', {
+                                  house: docs[0].houses[0],
+                                  name: docs[0].name,
+                                  id: docs[0]._id
+                                });
+    });
+
+    // setTimeout(function(){
+    //   User.findOne({name:data.user.user}), function (err,item) {
+    //     if (err) return handleError(err);
+    //     console.log()
+    //   }
+    // })
+
+    });
 
 });
 

@@ -21,4 +21,7 @@ var HouseSchema = new Schema({
   }]
 });
 
+// HouseSchema.pre('save', function (next) {
+//   });
+
 module.exports = mongoose.model('House', HouseSchema);
