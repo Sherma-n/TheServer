@@ -166,14 +166,18 @@ io.on('connect', function(socket){
                                 });
     });
 
-    // setTimeout(function(){
-    //   User.findOne({name:data.user.user}), function (err,item) {
-    //     if (err) return handleError(err);
-    //     console.log()
-    //   }
-    // })
+  });
 
+  //onlogging in
+  socket.on('loggedin', function (data){
+    console.log(data.user);
+      User.find({name: data.user}, function (err,docs){
+        console.log(docs);
+        if (err) throw (err);
+      socket.emit('loadhouses', { docs });
     });
+  });
+
 
 });
 
