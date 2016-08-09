@@ -122,12 +122,43 @@ getToken = function (headers) {
 
 //Socket io
 io.on('connect', function(socket){
+  //1
+  socket.emit('arefreshing', {user: "testing"});
+
   console.log('a user has connected');
 
   //on disconnection
   socket.on('disconnect', function (){
     console.log('a user has disconnected');
   });
+
+  //functions
+  updatinguser = function (data) {
+    socket.emit('showuser', {
+                              user: data[0].name,
+                              houses: data[0].houses,
+                              password: data[0].password,
+                              id: data[0]._id
+    });
+  };
+
+  updatinghouse = function (data) {
+          socket.emit('showhouse', {
+              name: data[0].name,
+              id: data[0]._id,
+              users: data[0].users,
+              country: data[0].country,
+              location: data[0].location,
+              pollution: data[0].pollution,
+              weather: {
+                currentweather: "SUNNY",
+                // data[0].weather.currentweather,
+                temperature: 28,
+                // data[0].weather.temperature,
+              },
+              windows: data[0].windows
+          });
+  };
 
   //on saving a user
   socket.on('userregistered', function(data){
@@ -169,44 +200,85 @@ io.on('connect', function(socket){
 
   //onlogging in
   socket.on('loggingin', function (data){
-      User.find({name: data.username}, function (err, docs){
-
-        House.find({name:docs[0].houses}, function(err,docs){
+      User.find({name: data.username}, function (err, doc) {
+        House.find({name:doc[0].houses[0]}, function(err,docs){
           socket.emit('loggedin', {
-                                users: docs[0].users[0],
-                                weather: docs[0].weather,
-                                windows: docs[0].windows,
-                                location: docs[0].location,
-                                country: docs[0].country,
-                                name: docs[0].name,
-                                id: docs[0]._id
-                                  })
-        })
+              name: docs[0].name,
+              id: docs[0]._id,
+              users: docs[0].users,
+              country: docs[0].country,
+              location: docs[0].location,
+              pollution: docs[0].pollution,
+              weather: {
+                currentweather: "SUNNY",
+                // docs[0].weather.currentweather,
+                temperature: 28,
+                // docs[0].weather.temperature,
+              },
+              windows: docs[0].windows
+          })
+        });
+      });
 
-        console.log(docs[0].houses);
-        console.log(docs[0].name);
-        console.log(docs[0]._id);
-
-      })
   });
 
   socket.on('creatingwindow', function (data) {
-      console.log(data.windowname);
+
       House.findById({_id: data.houseid}, function (err,doc){
         console.log('in Socket IO DB call')
         var win = {
                     "windowname": data.windowname,
                     "windowstatus": false,
                   };
+
         doc.windows.push(win);
         doc.save();
+        console.log('window is created');
+        console.log(doc);
         socket.emit('createdwindow', {doc});
 
       })
   })
 
+  socket.on('gettingdata', function (data){
+    console.log(data);
+  })
 
-});
+  socket.on('getData', function (data) {
+    console.log("yeah its this");
+    console.log(data);
+    console.log("data");
+    User.find({name: data.user}, function (err, doc) {
+        House.find({name:doc[0].houses[0]}, function(err,docs){
+          updatinghouse(docs);
+        });
+    });
+    User.find({name: data.user}, function (err, doc) {
+      updatinguser(doc);
+    });
+
+  });
+
+  socket.on('removinghouseuser', function(data) {
+    console.log(data);
+    User.find({name: data.remove}, function (err, doc) {
+                                          // remembertochange
+      var delhse = (doc[0].houses.indexOf(data.housename));
+      doc[0].houses.splice(delhse, 1);
+      doc.save();
+      updatinguser(doc);
+    });
+    House.find({name: data.housename}, function (err, doc) {
+                                        //remembertochange
+      var deluse = (doc[0].users.indexOf(data.remove));
+      doc[0].users.splice(deluse, 1);
+      doc.save();
+      updatinghouse(doc);
+    })
+  });
+
+
+});// sockets end
 
 // connect the api routes under /api/*
 app.use('/api', apiRoutes);
