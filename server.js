@@ -158,7 +158,6 @@ io.on('connect', function(socket){
 
     User.find({name: data.user.user}, function (err,docs){
       if (err) throw (err);
-      console.log(docs);
       socket.emit('loadhouses', {
                                   house: docs[0].houses[0],
                                   name: docs[0].name,
@@ -169,14 +168,42 @@ io.on('connect', function(socket){
   });
 
   //onlogging in
-  socket.on('loggedin', function (data){
-    console.log(data.user);
-      User.find({name: data.user}, function (err,docs){
-        console.log(docs);
-        if (err) throw (err);
-      socket.emit('loadhouses', { docs });
-    });
+  socket.on('loggingin', function (data){
+      User.find({name: data.username}, function (err, docs){
+
+        House.find({name:docs[0].houses}, function(err,docs){
+          socket.emit('loggedin', {
+                                users: docs[0].users[0],
+                                weather: docs[0].weather,
+                                windows: docs[0].windows,
+                                location: docs[0].location,
+                                country: docs[0].country,
+                                name: docs[0].name,
+                                id: docs[0]._id
+                                  })
+        })
+
+        console.log(docs[0].houses);
+        console.log(docs[0].name);
+        console.log(docs[0]._id);
+
+      })
   });
+
+  socket.on('creatingwindow', function (data) {
+      console.log(data.windowname);
+      House.findById({_id: data.houseid}, function (err,doc){
+        console.log('in Socket IO DB call')
+        var win = {
+                    "windowname": data.windowname,
+                    "windowstatus": false,
+                  };
+        doc.windows.push(win);
+        doc.save();
+        socket.emit('createdwindow', {doc});
+
+      })
+  })
 
 
 });
