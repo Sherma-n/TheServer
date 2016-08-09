@@ -222,6 +222,21 @@ io.on('connect', function(socket){
 
   });
 
+  socket.on('addingauser', function (data) {
+    console.log('userdataincomeing')
+    House.findById({_id: data.houseid}, function (err,doc){
+      doc.users.push(data.newuser);
+      doc.save();
+      console.log("new user added to house");
+    });
+    User.find({name: data.newuser}, function (err,doc){
+      doc[0].houses.push(data.newuser);
+      doc[0].save();
+      console.log("house added to new user");
+    });
+    socket.emit('arefreshing', {user: "testing"});
+  });
+
   socket.on('creatingwindow', function (data) {
 
       House.findById({_id: data.houseid}, function (err,doc){
@@ -234,20 +249,17 @@ io.on('connect', function(socket){
         doc.windows.push(win);
         doc.save();
         console.log('window is created');
-        console.log(doc);
-        socket.emit('createdwindow', {doc});
+        socket.emit('arefreshing', {user: "testing"});
 
-      })
-  })
+      });
+  });
 
   socket.on('gettingdata', function (data){
-    console.log(data);
+
+
   })
 
   socket.on('getData', function (data) {
-    console.log("yeah its this");
-    console.log(data);
-    console.log("data");
     User.find({name: data.user}, function (err, doc) {
         House.find({name:doc[0].houses[0]}, function(err,docs){
           updatinghouse(docs);
@@ -260,22 +272,52 @@ io.on('connect', function(socket){
   });
 
   socket.on('removinghouseuser', function(data) {
-    console.log(data);
     User.find({name: data.remove}, function (err, doc) {
                                           // remembertochange
       var delhse = (doc[0].houses.indexOf(data.housename));
       doc[0].houses.splice(delhse, 1);
-      doc.save();
+      doc[0].save();
       updatinguser(doc);
     });
     House.find({name: data.housename}, function (err, doc) {
                                         //remembertochange
       var deluse = (doc[0].users.indexOf(data.remove));
       doc[0].users.splice(deluse, 1);
-      doc.save();
+      doc[0].save();
       updatinghouse(doc);
     })
   });
+
+  socket.on('updatehousename', function(data) {
+    House.findById({_id: data.houseid}, function (err,doced){
+      // doc.name = data.newname;
+      // doced.save();
+      var houseUsers = doced.users;
+        for(var i = 0; i < houseUsers.length;i++) {
+          var eachUser = houseUsers[i];
+            User.find({name: houseUsers[i]}, function (err, doc) {
+              var housetochange = doced.name;
+              var userhouses = doc[0].houses;
+              console.log('Whaatsadjahkdgfjhsdgf');
+              console.log(userhouses.find(housetochange));
+              console.log(doced.users);
+              // doc[0].houses.find({name: doced.name}) = data.newname;
+              // doc[0].save();
+              function searchforuser (str, Array) {
+
+              }
+              // function searchStringInArray (str, strArray) {
+              //     for (var j=0; j<strArray.length; j++) {
+              //         if (strArray[j].match(str)) return j;
+              //     }
+              //     return -1;
+              // }
+            });
+        }
+    });
+  });
+
+
 
 
 });// sockets end
