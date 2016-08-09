@@ -254,16 +254,18 @@ io.on('connect', function(socket){
       });
   });
 
-  socket.on('gettingdata', function (data){
-
-
-  })
+  function findviahousename (data) {
+    console.log(data);
+    House.find({name: data}, function(err,docs){
+          console.log("booooooooom");
+          console.log(docs);
+          updatinghouse(docs);
+        });
+  };
 
   socket.on('getData', function (data) {
     User.find({name: data.user}, function (err, doc) {
-        House.find({name:doc[0].houses[0]}, function(err,docs){
-          updatinghouse(docs);
-        });
+      findviahousename(doc[0].houses[0])
     });
     User.find({name: data.user}, function (err, doc) {
       updatinguser(doc);
@@ -290,29 +292,42 @@ io.on('connect', function(socket){
 
   socket.on('updatehousename', function(data) {
     House.findById({_id: data.houseid}, function (err,doced){
-      // doc.name = data.newname;
+      // doced.name = data.newname;
       // doced.save();
       var houseUsers = doced.users;
-        for(var i = 0; i < houseUsers.length;i++) {
-          var eachUser = houseUsers[i];
-            User.find({name: houseUsers[i]}, function (err, doc) {
-              var housetochange = doced.name;
-              var userhouses = doc[0].houses;
-              console.log('Whaatsadjahkdgfjhsdgf');
-              console.log(userhouses.find(housetochange));
-              console.log(doced.users);
-              // doc[0].houses.find({name: doced.name}) = data.newname;
-              // doc[0].save();
-              function searchforuser (str, Array) {
+        for(var i = 0; i < doced.users.length;i++) {
+          User.find({name: doced.users[i]}, function(err, doc){
+            for(var i = 0; i < doc[0].houses.length;i++) {
+              if (doc[0].houses[i] == doced.name) {
+                doc[0].houses[i] = data.newname;
+                doc[0].save();
+                doced.name = data.newname;
+                doced.save();
+                console.log(doced.name);
+              };
+            };
 
-              }
-              // function searchStringInArray (str, strArray) {
-              //     for (var j=0; j<strArray.length; j++) {
-              //         if (strArray[j].match(str)) return j;
-              //     }
-              //     return -1;
-              // }
-            });
+          });
+          // console.log("first for loop");
+        //   var eachUser = houseUsers[i];
+        //     User.find({name: houseUsers[i]}, function (err, doc) {
+        //       var housetochange = doced.name;
+        //       var userhouses = doc[0].houses;
+        //       console.log('Whaatsadjahkdgfjhsdgf');
+        //       console.log(doc[0].houses);
+        //       console.log(doced.users);
+
+
+        //       // doc[0].houses.find({name: doced.name}) = data.newname;
+        //       // doc[0].save();
+
+        //       // function searchStringInArray (str, strArray) {
+        //       //     for (var j=0; j<strArray.length; j++) {
+        //       //         if (strArray[j].match(str)) return j;
+        //       //     }
+        //       //     return -1;
+        //       // }
+        //     });
         }
     });
   });
