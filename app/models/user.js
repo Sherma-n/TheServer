@@ -15,7 +15,7 @@ var UserSchema = new Schema({
         type: String,
         required: true
     },
-    houses: []
+  houses: []
 });
 
 UserSchema.pre('save', function (next) {
