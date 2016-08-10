@@ -27,3 +27,5 @@ var HouseSchema = new Schema({
 // module.exports = mongoose.model('House', HouseSchema);
 var House = mongoose.model('House', HouseSchema);
 module.exports = House;
+
+

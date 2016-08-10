@@ -181,9 +181,39 @@ io.on('connect', function(socket){
     });
   }); //creating new house end
 
-  socket.on('creatingwindow', function (err, data){
-    console.log(data);
-  })
+  socket.on('creatingwindow', function (data){
+    // console.log(data);
+    House.findById({_id: data.houseid}, function(err, house){
+      // console.log(data.windows);
+
+      house.windows.push({
+        windowname: data.newwindow,
+        windowstatus: false
+      });
+      house.save();
+      console.log(house.windows);
+      socket.emit('newestupdate',{});
+    });
+  });
+
+  socket.on('removingwindow', function(data) {
+    // console.log(data)
+    House.findById({_id: data.houseid}, function(err, house){
+      // console.log(house);
+      house.windows.forEach(function (wind){
+        // wind.forEach(function (windname){
+          // console.log(windname);
+          if (wind.windowname == data.removewindow) {
+            house.windows.splice(house.windows.indexOf(wind, 1));
+          house.save();
+          socket.emit('newestupdate',{});
+          } else {};
+
+
+        // })
+      })
+    })
+  });
 
   socket.on('removinguser', function (data) {
         User.find({name: data.removeuser}, function(err,user){
