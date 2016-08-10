@@ -77,7 +77,7 @@ apiRoutes.post('/authenticate', function(req, res) {
           // if user is found and password is right create a token
           var token = jwt.encode(user, config.secret);
           // return the information including token as JSON
-          res.json({success: true, token: 'JWT ' + token, user: req.body.name});
+          res.json({success: true, token: 'JWT ' + token, user: user});
         } else {
           res.send({success: false, msg: 'Authentication failed. Wrong password.'});
         }
@@ -99,7 +99,12 @@ apiRoutes.get('/memberinfo', passport.authenticate('jwt', { session: false}), fu
         if (!user) {
           return res.status(403).send({success: false, msg: 'Authentication failed. User not found.'});
         } else {
-          res.json({success: true, msg: 'Welcome in the member area ' + user.name + '!'});
+          res.json({
+            success: true,
+            user: user,
+            mgs: "user is found"
+          });
+
         }
     });
   } else {
@@ -122,9 +127,6 @@ getToken = function (headers) {
 
 //Socket io
 io.on('connect', function(socket){
-  //1
-  socket.emit('arefreshing', {user: "testing"});
-
   console.log('a user has connected');
 
   //on disconnection
@@ -132,13 +134,30 @@ io.on('connect', function(socket){
     console.log('a user has disconnected');
   });
 
+  // get house data on page validate user
+  socket.on('getData', function (data) {
+    User.findById(data.id, function(err, user){
+      if (err) {return err;}
+
+      var houseName = user.houses;
+
+      House.find({name: {$in: houseName}}, function(err, houses){
+        if (err) {return err;}
+
+        socket.emit('arefreshing', {houses: houses});
+      })
+    });
+  });
+
+
+
   //functions
   updatinguser = function (data) {
     socket.emit('showuser', {
-                              user: data[0].name,
-                              houses: data[0].houses,
-                              password: data[0].password,
-                              id: data[0]._id
+      user: data[0].name,
+      houses: data[0].houses,
+      password: data[0].password,
+      id: data[0]._id
     });
   };
 
@@ -215,15 +234,22 @@ io.on('connect', function(socket){
   //onlogging in
   socket.on('loggingin', function (data){
       User.find({name: data.username}, function (err, doc) {
-
-        console.log(doc);
         console.log('Console Log House')
         console.log(doc[0].houses[0]);
+          socket.emit('loggedinuser', {
+            houses: doc[0].houses,
+            name: doc[0].name,
+            id: doc[0]._id
+          });
 
         House.find({name:doc[0].houses[0]}, function(err,docs){
-
+          // console.log('before going to loggedin');
+          // console.log('data');
+          // console.log(data);
+          console.log('doc');
+          console.log(doc);
+          console.log('docs');
           console.log(docs);
-
           socket.emit('loggedin', {
               name: docs[0].name,
               id: docs[0]._id,
@@ -256,7 +282,7 @@ io.on('connect', function(socket){
       doc[0].save();
       console.log("house added to new user");
     });
-    socket.emit('arefreshing', {user: "testing"});
+    socket.emit('arefreshing', {user: data.newuser});
   });
 
   socket.on('creatingwindow', function (data) {
@@ -271,7 +297,7 @@ io.on('connect', function(socket){
         doc.windows.push(win);
         doc.save();
         console.log('window is created');
-        socket.emit('arefreshing', {user: "testing"});
+        socket.emit('arefreshing', {user: data.username});
 
       });
   });
@@ -280,23 +306,22 @@ io.on('connect', function(socket){
     console.log(data);
     House.findById({_id: data.houseid}, function (err,data){
           console.log("booooooooom");
-          console.log(docs);
           updatinghouse(docs);
         });
   };
 
-  socket.on('getData', function (data) {
-    User.find({name: data.user}, function (err, doc) {
-      console.log(doc[0].name);
-      House.find({users: doc[0].name}, function (err,doced){
-        updatinghouse(doced);
-      })
-    });
-    User.find({name: data.user}, function (err, doc) {
-      updatinguser(doc);
-    });
+  // socket.on('getData', function (data) {
+  //   User.find({name: data.user}, function (err, doc) {
+  //     console.log(doc[0].name);
+  //     House.find({users: doc[0].name}, function (err,doced){
+  //       updatinghouse(doced);
+  //     })
+  //   });
+  //   User.find({name: data.user}, function (err, doc) {
+  //     updatinguser(doc);
+  //   });
 
-  });
+  // });
 
   socket.on('removinghouseuser', function(data) {
     User.find({name: data.remove}, function (err, doc) {
@@ -316,6 +341,7 @@ io.on('connect', function(socket){
   });
 
   socket.on('updatehousename', function(data) {
+    console.log(data);
     House.findById({_id: data.houseid}, function (err,doced){
       // doced.name = data.newname;
       // doced.save();
@@ -329,37 +355,14 @@ io.on('connect', function(socket){
                 doced.name = data.newname;
                 doced.save();
                 console.log(doced.name);
+                socket.emit('arefreshing', {user: data.username});
               };
             };
 
           });
-          // console.log("first for loop");
-        //   var eachUser = houseUsers[i];
-        //     User.find({name: houseUsers[i]}, function (err, doc) {
-        //       var housetochange = doced.name;
-        //       var userhouses = doc[0].houses;
-        //       console.log('Whaatsadjahkdgfjhsdgf');
-        //       console.log(doc[0].houses);
-        //       console.log(doced.users);
-
-
-        //       // doc[0].houses.find({name: doced.name}) = data.newname;
-        //       // doc[0].save();
-
-        //       // function searchStringInArray (str, strArray) {
-        //       //     for (var j=0; j<strArray.length; j++) {
-        //       //         if (strArray[j].match(str)) return j;
-        //       //     }
-        //       //     return -1;
-        //       // }
-        //     });
         }
     });
   });
-
-
-
-
 });// sockets end
 
 // connect the api routes under /api/*
