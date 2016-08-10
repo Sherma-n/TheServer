@@ -174,6 +174,20 @@ io.on('connect', function(socket){
                               location: data.house.location,
                               users: [data.user.user]
                             });
+  //        name: data.house.name,
+  //   users: [data.user.user],
+  //   country: data.house.country,
+  //   location: data.house.location,
+  //   pollution: '',
+  //   weather: {
+  //     currentweather: SUNNY,
+  //     temperature: 28,
+  //   },
+  //   windows:[{
+  //     windowname: ' ',
+  //     windowstatus: false,
+  //   }]
+  // });
     newHouse.save(function(err) {
       if (err) throw err;
       // console.log(newHouse);
@@ -201,7 +215,15 @@ io.on('connect', function(socket){
   //onlogging in
   socket.on('loggingin', function (data){
       User.find({name: data.username}, function (err, doc) {
+
+        console.log(doc);
+        console.log('Console Log House')
+        console.log(doc[0].houses[0]);
+
         House.find({name:doc[0].houses[0]}, function(err,docs){
+
+          console.log(docs);
+
           socket.emit('loggedin', {
               name: docs[0].name,
               id: docs[0]._id,
@@ -256,7 +278,7 @@ io.on('connect', function(socket){
 
   function findviahousename (data) {
     console.log(data);
-    House.find({name: data}, function(err,docs){
+    House.findById({_id: data.houseid}, function (err,data){
           console.log("booooooooom");
           console.log(docs);
           updatinghouse(docs);
@@ -265,7 +287,10 @@ io.on('connect', function(socket){
 
   socket.on('getData', function (data) {
     User.find({name: data.user}, function (err, doc) {
-      findviahousename(doc[0].houses[0])
+      console.log(doc[0].name);
+      House.find({users: doc[0].name}, function (err,doced){
+        updatinghouse(doced);
+      })
     });
     User.find({name: data.user}, function (err, doc) {
       updatinguser(doc);
