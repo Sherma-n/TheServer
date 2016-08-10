@@ -144,56 +144,86 @@ io.on('connect', function(socket){
       // console.log('dadata');
       // console.log(data);
       if (err) {return err;}
+      console.log(user.houses[0]);
 
       var houseName = user.houses;
+      // (deniscode);
+      House.findById({_id: user.houses[0]}, function(err, houses){
 
-      House.find({name: {$in: houseName}}, function(err, houses){
-        if (err) {return err;}
-        console.log('houses');
-        console.log(houses);
-        console.log('user');
-        console.log(user);
-        console.log('data');
-        console.log(data);
-        socket.emit('arefreshing', {houses: houses[0]});
-      })
+        houses.users.forEach(function (value) {
+          User.findById({_id: value}, function (err, user) {
+            console.log(user);
+            var allusers = [];
+            allusers.push(user.name);
+            socket.emit('updateuserlist', {userlist: allusers});
+          });
+        console.log('waaaagh');
+        console.log(value);
+        });
+
+        socket.emit('arefreshing', {houses: houses});
+      });
+
+
+
+      //deniscode
+  //     House.find({name: {$in: houseName}}, function(err, houses){
+  //       if (err) {return err;}
+  //       console.log('houses');
+  //       console.log(houses);
+  //       console.log('user');
+  //       console.log(user);
+  //       console.log('data');
+  //       console.log(data);
+  //       socket.emit('arefreshing', {houses: houses[0]});
+  //     })
     });
   });
 
   //Socket Code
-  socket.on('creatingnewhouse', function (data) {
-    console.log('this is the creating new house data');
-    console.log(data);
-    var newHouse = new House  ({
-      name: data.housename,
-      country: data.country,
-      location: data.location,
-      users: [data.userid],
-      pollution: '',
-      weather: {
-        currentweather: "SUNNY",
-        temperature: 28
-      },
-      windows: []
-    });
+  socket.on('addedHouse', function (data) {
 
-    newHouse.save(function(err, doc) {
-      if (err) throw err;
-      console.log('data user id');
-      console.log(data.userid);
-      User.findById({_id: data.userid}, function (err, user) {
-        console.log("this is the found user");
-        console.log(user);
-        user.houses.push(data.userid);
-        user.save();
-        socket.emit('housecreated', {
-          user: user,
-          house: doc
-        });
-      });
-       console.log('House Created');
-
+    // console.log(data);
+    House.findById({_id: data.houseid}, function (err, house) {
+      house.name = data.housename;
+      house.country = data.housecountry;
+      house.location = data.houselocation;
+      console.log('waaaagh');
+      console.log(house);
     });
+    // var newHouse = new House  ({
+    //   name: data.housename,
+    //   country: data.country,
+    //   location: data.location,
+    //   users: [data.userid],
+    //   pollution: '',
+    //   weather: {
+    //     currentweather: "SUNNY",
+    //     temperature: 28
+    //   },
+    //   windows: []
+    // });
+
+    // newHouse.save(function(err, doc) {
+    //   if (err) throw err;
+    //   console.log('data user id');
+    //   console.log(data.userid);
+    //   User.findById({_id: data.userid}, function (err, user) {
+    //     console.log("this is the found user");
+    //     console.log(user);
+    //     user.houses.push(data.userid);
+    //     user.save();
+    //     socket.emit('housecreated', {
+    //       user: user,
+    //       house: doc
+    //     });
+    //   });
+    //    console.log('House Created');
+
+    // });
+  }); //creating new house end
+
+  socket.on('addedHouse', function(data) {
 
   })
 

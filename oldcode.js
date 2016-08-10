@@ -211,3 +211,41 @@
   //       }
   //   });
   // });
+
+
+    //Socket Code
+  socket.on('creatingnewhouse', function (data) {
+    console.log('this is the creating new house data');
+    console.log(data);
+    var newHouse = new House  ({
+      name: data.housename,
+      country: data.country,
+      location: data.location,
+      users: [data.userid],
+      pollution: '',
+      weather: {
+        currentweather: "SUNNY",
+        temperature: 28
+      },
+      windows: []
+    });
+
+    newHouse.save(function(err, doc) {
+      if (err) throw err;
+      console.log('data user id');
+      console.log(data.userid);
+      User.findById({_id: data.userid}, function (err, user) {
+        console.log("this is the found user");
+        console.log(user);
+        user.houses.push(data.userid);
+        user.save();
+        socket.emit('housecreated', {
+          user: user,
+          house: doc
+        });
+      });
+       console.log('House Created');
+
+    });
+
+  })
