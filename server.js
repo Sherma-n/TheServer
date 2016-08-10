@@ -136,29 +136,32 @@ io.on('connect', function(socket){
 
   // get house data on page validate user
   socket.on('getData', function (data) {
-    console.log('getData');
-    console.log(data);
+    // console.log('getData');
+    // console.log(data);
     User.findById(data.id, function(err, user){
       // console.log('dauser');
       // console.log(user);
       // console.log('dadata');
       // console.log(data);
       if (err) {return err;}
-      console.log(user.houses[0]);
+      // console.log(user.houses[0]);
 
       var houseName = user.houses;
       // (deniscode);
       House.findById({_id: user.houses[0]}, function(err, houses){
-
+          var allusers = [];
         houses.users.forEach(function (value) {
           User.findById({_id: value}, function (err, user) {
             console.log(user);
-            var allusers = [];
+
             allusers.push(user.name);
+            console.log(allusers);
             socket.emit('updateuserlist', {userlist: allusers});
+
           });
-        console.log('waaaagh');
-        console.log(value);
+        // console.log('waaaagh');
+        // console.log(value);
+        // console.log(houses);
         });
 
         socket.emit('arefreshing', {houses: houses});
@@ -188,44 +191,47 @@ io.on('connect', function(socket){
       house.name = data.housename;
       house.country = data.housecountry;
       house.location = data.houselocation;
-      console.log('waaaagh');
-      console.log(house);
+      // console.log('waaaagh');
+      // console.log(house);
     });
-    // var newHouse = new House  ({
-    //   name: data.housename,
-    //   country: data.country,
-    //   location: data.location,
-    //   users: [data.userid],
-    //   pollution: '',
-    //   weather: {
-    //     currentweather: "SUNNY",
-    //     temperature: 28
-    //   },
-    //   windows: []
-    // });
-
-    // newHouse.save(function(err, doc) {
-    //   if (err) throw err;
-    //   console.log('data user id');
-    //   console.log(data.userid);
-    //   User.findById({_id: data.userid}, function (err, user) {
-    //     console.log("this is the found user");
-    //     console.log(user);
-    //     user.houses.push(data.userid);
-    //     user.save();
-    //     socket.emit('housecreated', {
-    //       user: user,
-    //       house: doc
-    //     });
-    //   });
-    //    console.log('House Created');
-
-    // });
   }); //creating new house end
 
-  socket.on('addedHouse', function(data) {
 
+
+  //creating a new user
+  socket.on('addingnewuser', function (data) {
+    // console.log('fantastimo')
+    // console.log(data.newuser);
+    User.find({name: data.newuser}, function(err, user) {
+      // console.log(user[0]._id);
+      // console.log(data.houseid);
+
+      House.findById({_id: data.houseid}, function (err, house){
+
+        house.users.push(user[0].id);
+        user[0].houses.push(data.houseid);
+        // console.log('boooooooom');
+        // console.log(user[0]);
+        user[0].save();
+        house.save();
+        socket.emit('newestupdate', {});
+      });
+    });
+  });
+
+  socket.on('allupdate', function (data) {
+    // console.log('boooooooom');
+    // console.log(data);
+    User.find({name: data.currentusername}, function (err, user){
+      User.findById({_id: data.currenthouseid}, function (err, house) {
+        socket.emit('newestupdate', {
+          newuser: user[0],
+          newhouse: house
+        });
+      });
+    });
   })
+
 
 
 
