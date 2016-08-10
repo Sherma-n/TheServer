@@ -183,31 +183,64 @@ io.on('connect', function(socket){
   }); //creating new house end
 
   socket.on('removinguser', function (data) {
-      User.find({name: data.removeuser}, function (err, user){
-        user[0].houses.forEach(function(item){
-          if (item == data.houseid) {
-          user[0].houses.splice(user[0].houses.indexOf(item), 1);
-          socket.emit('newestupdate', {});
-          console.log('userhosues');
-          console.log(user[0]);
-          } else {};
-        House.findById({_id: data.houseid}, function (err, house) {
-      house.users.forEach(function (value) {
-        if (value == data.removeuser) {
-          house.users.forEach(function (thing){
-            if (thing == user[0]._id) {
-              house.users.splice(house.users.indexOf(item), 1);
-              console.log('house users')
-              console.log(house);
+        User.find({name: data.removeuser}, function(err,user){
+          // console.log(user);
+          user[0].houses.forEach(function(item){
+            if (item == data.houseid) {
+              user[0].houses.splice(user[0].houses.indexOf(item, 1));
+              console.log(user[0]);
+              console.log(user[0].houses);
+              // user[0].save();
+              socket.emit('newestupdate', {});
             } else {};
           });
-        } else {};
         });
-      });
+        House.findById({_id: data.houseid}, function(err,house){
+          house.users.forEach(function(item){
+            console.log(house.users);
+            User.findById({_id:item}, function(err, single){
+              console.log(single);
+              if (single.name == data.removeuser) {
+                house.users.splice(house.users.indexOf(single, 1));
+              console.log(house.users);
+              house.save();
+              socket.emit('newestupdate', {});
+              } else  {}
+            })
+          });
+
         });
 
 
-      });
+
+
+
+
+      // User.find({name: data.removeuser}, function (err, user){
+      //   user[0].houses.forEach(function(item){
+      //     if (item == data.houseid) {
+      //     user[0].houses.splice(user[0].houses.indexOf(item), 1);
+      //     socket.emit('newestupdate', {});
+      //     console.log('userhosues');
+      //     console.log(user[0]);
+      //     } else {};
+      //   House.findById({_id: data.houseid}, function (err, house) {
+      // house.users.forEach(function (value) {
+      //   if (value == data.removeuser) {
+      //     house.users.forEach(function (thing){
+      //       if (thing == user[0]._id) {
+      //         house.users.splice(house.users.indexOf(item), 1);
+      //         console.log('house users')
+      //         console.log(house);
+      //       } else {};
+      //     });
+      //   } else {};
+      //   });
+      // });
+      //   });
+
+
+      // });
   });
 
 
