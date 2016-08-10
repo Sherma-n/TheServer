@@ -136,15 +136,8 @@ io.on('connect', function(socket){
 
   // get house data on page validate user
   socket.on('getData', function (data) {
-    // console.log('getData');
-    // console.log(data);
     User.findById(data.id, function(err, user){
-      // console.log('dauser');
-      // console.log(user);
-      // console.log('dadata');
-      // console.log(data);
       if (err) {return err;}
-      // console.log(user.houses[0]);
 
       var houseName = user.houses;
       // (deniscode);
@@ -152,16 +145,11 @@ io.on('connect', function(socket){
           var allusers = [];
         houses.users.forEach(function (value) {
           User.findById({_id: value}, function (err, user) {
-            console.log(user);
 
             allusers.push(user.name);
-            console.log(allusers);
             socket.emit('updateuserlist', {userlist: allusers});
 
           });
-        // console.log('waaaagh');
-        // console.log(value);
-        // console.log(houses);
         });
 
         socket.emit('arefreshing', {houses: houses});
@@ -191,27 +179,48 @@ io.on('connect', function(socket){
       house.name = data.housename;
       house.country = data.housecountry;
       house.location = data.houselocation;
-      // console.log('waaaagh');
-      // console.log(house);
     });
   }); //creating new house end
+
+  socket.on('removinguser', function (data) {
+      User.find({name: data.removeuser}, function (err, user){
+        user[0].houses.forEach(function(item){
+          if (item == data.houseid) {
+          user[0].houses.splice(user[0].houses.indexOf(item), 1);
+          socket.emit('newestupdate', {});
+          console.log('userhosues');
+          console.log(user[0]);
+          } else {};
+        House.findById({_id: data.houseid}, function (err, house) {
+      house.users.forEach(function (value) {
+        if (value == data.removeuser) {
+          house.users.forEach(function (thing){
+            if (thing == user[0]._id) {
+              house.users.splice(house.users.indexOf(item), 1);
+              console.log('house users')
+              console.log(house);
+            } else {};
+          });
+        } else {};
+        });
+      });
+        });
+
+
+      });
+  });
 
 
 
   //creating a new user
   socket.on('addingnewuser', function (data) {
-    // console.log('fantastimo')
-    // console.log(data.newuser);
-    User.find({name: data.newuser}, function(err, user) {
-      // console.log(user[0]._id);
-      // console.log(data.houseid);
+     User.find({name: data.newuser}, function(err, user) {
+
 
       House.findById({_id: data.houseid}, function (err, house){
 
         house.users.push(user[0].id);
         user[0].houses.push(data.houseid);
-        // console.log('boooooooom');
-        // console.log(user[0]);
         user[0].save();
         house.save();
         socket.emit('newestupdate', {});
@@ -220,9 +229,7 @@ io.on('connect', function(socket){
   });
 
   socket.on('allupdate', function (data) {
-    // console.log('boooooooom');
-    // console.log(data);
-    User.find({name: data.currentusername}, function (err, user){
+     User.find({name: data.currentusername}, function (err, user){
       User.findById({_id: data.currenthouseid}, function (err, house) {
         socket.emit('newestupdate', {
           newuser: user[0],
