@@ -9,6 +9,7 @@ var User        = require('./app/models/user');
 var House       = require('./app/models/house')
 var port        = process.env.PORT || 8080;
 var jwt         = require('jwt-simple');
+var weather     = require('weather-js');
 
 
 //Require socket it
@@ -125,6 +126,46 @@ getToken = function (headers) {
   }
 };
 
+getweather = function(country, location, houseid) {
+  weather.find({search: country, location, degreeType: 'C'}, function(err, result) {
+    if(err) console.log(err);
+    var nowweather = result[0].current;
+    // console.log(nowweather.temperature);
+
+    House.findById({_id: houseid}, function (err, house) {
+      house.currentweather = nowweather.skytext;
+      house.temperature    = nowweather.temperature;
+      house.img            = nowweather.imageUrl;
+      house.skycode        = nowweather.skycode;
+      house.save()
+    })
+
+    console.log(nowweather.skycode);
+  });
+};
+
+// getweather('Hong Kong', 'HK', "57ab7e415e4a3165def5aea0");
+
+windowstate = function (skycode, houseid) {
+
+    House.findById({_id: houseid}, function (err, house){
+      house.windows.forEach(function(windo){
+        if (skycode < 22) {
+          windo.windowstatus = false;
+        } else {
+          windo.windowstatus = true;
+        };
+        // console.log(windo)
+      });
+      house.save();
+    });
+
+};
+
+windowstate(25, "57ab7e415e4a3165def5aea0");
+
+
+
 //Socket io
 io.on('connect', function(socket){
   console.log('a user has connected');
@@ -142,32 +183,20 @@ io.on('connect', function(socket){
       var houseName = user.houses;
       // (deniscode);
       House.findById({_id: user.houses[0]}, function(err, houses){
+        // console.log(houses);
           var allusers = [];
         houses.users.forEach(function (value) {
           User.findById({_id: value}, function (err, user) {
 
             allusers.push(user.name);
             socket.emit('updateuserlist', {userlist: allusers});
-
           });
         });
-
-        socket.emit('arefreshing', {houses: houses});
+        console.log(houses)
+        getweather(houses.country, houses.location, houses._id);
+        windowstate(houses.skycode ,houses._id)
+        io.emit('arefreshing', {houses: houses});
       });
-
-
-
-      //deniscode
-  //     House.find({name: {$in: houseName}}, function(err, houses){
-  //       if (err) {return err;}
-  //       console.log('houses');
-  //       console.log(houses);
-  //       console.log('user');
-  //       console.log(user);
-  //       console.log('data');
-  //       console.log(data);
-  //       socket.emit('arefreshing', {houses: houses[0]});
-  //     })
     });
   });
 
@@ -178,6 +207,8 @@ io.on('connect', function(socket){
       house.name = data.housename;
       house.country = data.housecountry;
       house.location = data.houselocation;
+      house.save();
+      io.emit('newestupdate',{});
     });
   }); //creating new house end
 
@@ -192,7 +223,7 @@ io.on('connect', function(socket){
       });
       house.save();
       console.log(house.windows);
-      socket.emit('newestupdate',{});
+      io.emit('newestupdate',{});
     });
   });
 
@@ -206,7 +237,7 @@ io.on('connect', function(socket){
           if (wind.windowname == data.removewindow) {
             house.windows.splice(house.windows.indexOf(wind, 1));
           house.save();
-          socket.emit('newestupdate',{});
+          io.emit('newestupdate',{});
           } else {};
 
 
@@ -224,7 +255,7 @@ io.on('connect', function(socket){
               console.log(user[0]);
               console.log(user[0].houses);
               // user[0].save();
-              socket.emit('newestupdate', {});
+              io.emit('newestupdate', {});
             } else {};
           });
         });
@@ -237,14 +268,16 @@ io.on('connect', function(socket){
                 house.users.splice(house.users.indexOf(single, 1));
               console.log(house.users);
               house.save();
-              socket.emit('newestupdate', {});
+              io.emit('newestupdate', {});
               } else  {}
             })
           });
         });
   });
 
-
+  socket.on('changewindowstate', function(data){
+    console.log(data);
+  })
 
 
 
@@ -259,7 +292,7 @@ io.on('connect', function(socket){
         user[0].houses.push(data.houseid);
         user[0].save();
         house.save();
-        socket.emit('newestupdate', {});
+        io.emit('newestupdate', {});
       });
     });
   });
@@ -267,7 +300,7 @@ io.on('connect', function(socket){
   socket.on('allupdate', function (data) {
      User.find({name: data.currentusername}, function (err, user){
       User.findById({_id: data.currenthouseid}, function (err, house) {
-        socket.emit('newestupdate', {
+        io.emit('newestupdate', {
           newuser: user[0],
           newhouse: house
         });

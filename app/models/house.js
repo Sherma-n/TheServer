@@ -11,10 +11,10 @@ var HouseSchema = new Schema({
   country: String,
   location: String,
   pollution: String,
-  weather: {
-    currentweather: String,
-    temperature: Number,
-  },
+  currentweather: String,
+  temperature: Number,
+  img: String,
+  skycode: Number,
   windows:[{
     windowname: String,
     windowstatus: Boolean,
