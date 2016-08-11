@@ -179,7 +179,7 @@ io.on('connect', function(socket){
   socket.on('getData', function (data) {
     User.findById(data.id, function(err, user){
       if (err) {return err;}
-      console.log(user)
+      // console.log(user)
       var houseName = user.houses;
       // (deniscode);
       House.findById({_id: user.houses[0]}, function(err, houses){
@@ -192,7 +192,7 @@ io.on('connect', function(socket){
             socket.emit('updateuserlist', {userlist: allusers});
           });
         });
-        console.log(houses)
+        // console.log(houses)
         getweather(houses.country, houses.location, houses._id);
         windowstate(houses.skycode ,houses._id)
         io.emit('arefreshing', {houses: houses});
@@ -214,7 +214,7 @@ io.on('connect', function(socket){
 
   socket.on('creatingwindow', function (data){
     console.log('showing creatingwindow')
-    console.log(data);
+    // console.log(data);
     House.findById({_id: data.houseid}, function(err, house){
       // console.log(data.windows);
 
@@ -223,7 +223,7 @@ io.on('connect', function(socket){
         windowstatus: false
       });
       house.save();
-      console.log(house.windows);
+      // console.log(house.windows);
       io.emit('newestupdate',{});
     });
   });
@@ -247,27 +247,29 @@ io.on('connect', function(socket){
     })
   });
 
-  socket.on('changewindowstate', function (data) {
+  // socket.on('changewindowstate', function (data) {
 
-    var selecteditem = null;
-    House.findById({_id: data.houseid}, function(err, house) {
-      // console.log('showing the window array')
+  //   var selecteditem = null;
+  //   House.findById({_id: data.houseid}, function(err, house) {
+  //     // console.log('showing the window array')
 
-      house.windows.forEach(function (item) {
-        if (item.windowname == data.windowname) {
-          selecteditem = item;
-        } else {};
-      });
-        // console.log(selecteditem.windowstatus)
-        selecteditem.windowstatus = !selecteditem.windowstatus;
-        house.save();
-        // console.log('Show me my house man')
-        // console.log(house.windows)
-        io.emit('updatethewindows', {
-          housewindows: house.windows
-        });
-    })
-  })
+  //     house.windows.forEach(function (item) {
+  //       if (item.windowname == data.windowname) {
+  //         selecteditem = item;
+  //       } else {};
+  //     });
+  //       // console.log(selecteditem.windowstatus)
+  //       selecteditem.windowstatus = !selecteditem.windowstatus;
+  //       house.save();
+  //       io.emit('newestupdate',{});
+  //       // console.log('Show me my house man')
+  //       // console.log(house.windows)
+  //       io.emit('updatethewindows', {
+  //         housewindows: house.windows
+  //         // io.emit('newestupdate',{});
+  //       });
+  //   })
+  // })
 
   socket.on('getleatestwindows', function(data) {
     House.findById({_id: data.houseid}, function(err, house){
